@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace DesafioBlip
 {
+    /// <summary>
+    /// Classe com a propriedades exigidas para criação do carrossel
+    /// </summary>
     public class RepositorioTake
     {
         public string AvatarURL { get; set; }

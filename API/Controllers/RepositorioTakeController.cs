@@ -14,9 +14,9 @@ namespace DesafioBlip.Controllers
     public class RepositorioTakeController : ControllerBase
     {
         /// <summary>
-        /// https://desafioblipapi.azure-api.net/RepositorioTake
+        /// Retorna os 5 repositórios mais antigos da Take com a linguagem C#
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Retorna um array de RepositorioTake</returns>
         // GET: <RepositorioTakeController>
         [HttpGet]
         public IActionResult Get()

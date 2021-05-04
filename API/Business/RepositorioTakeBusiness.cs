@@ -13,6 +13,10 @@ namespace DesafioBlip.Business
         ///  Listar informações sobre os 5 repositórios de linguagem C# mais antigos da Take,ordenados de forma crescente por data de criação.
         ///  Como o GitHub não tem o parametro language para filtrar os resultados dos repositórios da organização, serão coletados todos o registros
         ///  e filtrados.
+        ///  Considerando que não se sabe a quantidade de repositórios e sendo essa quantida de flexível, a rotina irá primeiro consultar a quantidade de 
+        ///  repositórios da organização e logo buscar de forma paginada.
+        ///  Identifiquei que repositorios com mais de uma liguagem vem com a language null, e deve-se buscar as linguagens pelo languages_url, 
+        /// não capturei todos por esse metodo para não criar sobrecarga de requisições.
         /// </summary>
         /// <returns></returns>
         public IEnumerable<RepositorioTake> GetRepositoriosAntigoCSharp()
@@ -29,20 +33,20 @@ namespace DesafioBlip.Business
 
             System.Net.Http.HttpResponseMessage response;
 
-            //Como o limite por página é de 100 registros, verificar a quantidade de repositórios que a TakeNet tem
+           
             response = clientGitHUb.GetAsync("orgs/takenet").Result;
             if (response.IsSuccessStatusCode)
             {
-                TotalRepositorios = ((dynamic)JsonConvert.DeserializeObject(response.Content.ReadAsStringAsync().Result)).public_repos;//result.public_repos;
+                TotalRepositorios = ((dynamic)JsonConvert.DeserializeObject(response.Content.ReadAsStringAsync().Result)).public_repos;
 
-                //Calcula o total de páginas, considerando trazer 100 registros por página
+              
                 TotalPaginas = (int)Math.Ceiling(TotalRepositorios / 100.00);
 
                 for (int pg = 1; pg <= TotalPaginas; pg++)
                 {
                     response = clientGitHUb.GetAsync("orgs/takenet/repos?per_page=100&page=" + pg + "&sort=created&direction=asc").Result;
                     if (response.IsSuccessStatusCode)
-                    {  //GET
+                    {  
                         string content = response.Content.ReadAsStringAsync().Result;
                         dynamic result = JsonConvert.DeserializeObject(content);
                         for (int index = 0; index < result.Count; index++)
@@ -58,8 +62,7 @@ namespace DesafioBlip.Business
                                 });
                             }
 
-                            /*Repositorios com mais de uma liguagem vem com a language null, e deve-se buscar as linguagens pelo languages_url, 
-                            não capturei todos por esse metodo para não criar sobrecarga de requisições*/
+                           
                             if (result[index].language == null)
                             {
                                 if (GetRepositorioLanguages((string)result[index].languages_url, "C#"))
@@ -79,19 +82,18 @@ namespace DesafioBlip.Business
                     }
                     else
                     {
-                        throw new Exception("GitHub API: (" + response.StatusCode.ToString() + ") " + response.ReasonPhrase) ;// Tratamento devido o limite de 60 requisições hora
+                        throw new Exception("GitHub API: (" + response.StatusCode.ToString() + ") " + response.ReasonPhrase);// Tratamento devido o limite de 60 requisições hora
 
                     }
                 }
             }
             else
             {
-                throw new Exception("GitHub API: (" + response.StatusCode.ToString() + ") " + response.ReasonPhrase) ;// Tratamento devido o limite de 60 requisições hora
+                throw new Exception("GitHub API: (" + response.StatusCode.ToString() + ") " + response.ReasonPhrase);// Tratamento devido o limite de 60 requisições hora
 
             }
             clientGitHUb.Dispose();
 
-            //Filtrar os 5 mais antigos da Take,ordenados de forma crescente por data de criação
             ret = (from repo in ret
                    orderby repo.DataCriacao
                    select repo).Take(5).ToList();
